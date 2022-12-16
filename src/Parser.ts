@@ -1,144 +1,150 @@
 import P from "parsimmon";
 import {bible} from './Bible'
+import { Passage } from "./Passage";
+import { Reference } from "./Reference";
 
 const books = Object.keys(bible.books);
 
-export const Parser = P.createLanguage({
-  Passage(r) {
-    const parsers = [
-      ["from", r.Reference],
+interface LanguageSpec {
+  passage: Passage
+  reference: Reference | Partial<Reference>
+  fullReference: Reference
+  bookReference: Partial<Reference>
+  bookChapterReference: Partial<Reference>
+  bookChapterVerseReference: Partial<Reference>
+  partialReference: string  | Pick<Reference, 'chapter' | 'verse'>
+  partialChapterOrVerseReference: string;
+  partialChapterAndVerseReference: Pick<Reference, 'chapter' | 'verse'>
+  book: string
+  chapter: string
+  verse: string
+  colon: string
+  dash: string
+  optionalBook: string|null
+  optionalChapter: string|null
+  optionalVerse: string|null
+  optionalColon: string|null
+  optionalDash: string|null
+  _: string
+}
+
+type PartialReferenceResult = Reference | Partial<Reference> | null
+
+export const Parser = P.createLanguage<LanguageSpec>({
+  passage(r) {
+    const parsers: Array<['from' |'to', P.Parser<Reference | PartialReferenceResult>] | P.Parser<unknown>> = [
+      ["from", r.reference],
       r._,
-      r.OptDash,
-      ["to", r.PartialReference.or(P.succeed(null))],
+      r.optionalDash,
+      ["to", r.partialReference.or(P.succeed(null))],
     ];
-    return P.seqObj(...parsers).map((result) => {
-      if(result.to === null) {
-        return {
-          ...result,
-          to: result.from
-        }
+    return P.seqObj<Passage | {from:Reference, to: PartialReferenceResult}, 'from' | 'to'>(...parsers).map<Passage>(({to, from}) => {
+      if(to === null) {
+        return new Passage(from, from)
       }
 
-      if (typeof result.to === 'string') {
-        if(result.from.verse) {
-          return {
-            ...result,
-            to: {
-              ...result.from,
-              verse: result.to
-            }
-          }
+      if (typeof to === 'string') {
+        if(from.verse) {
+          return new Passage(from, new Reference(from.book, from.chapter, parseInt(to, 10)))
         }
 
-        return {
-          ...result,
-          to: {
-            ...result.from,
-            chapter: result.to
-          }
-        }
+        return new Passage(from, new Reference(from.book, parseInt(to, 10)))
       }
 
-      if(result.to.book === undefined) {
-        return {
-          ...result,
-          to: {
-            ...result.from,
-            ...result.to
-          }
-        }
+      if(to.book === undefined) {
+        return new Passage(from, new Reference(from.book, to.chapter, to.verse))
       }
 
-      return result
+      return new Passage(from, new Reference(to.book, to.chapter, to.verse))
     });
   },
-  Reference(r) {
+  reference(r) {
     return P.alt(
-      r.FullReference,
-      r.BookChapterVerseReference,
-      r.BookChapterReference,
-      r.BookReference
+      r.fullReference,
+      r.bookChapterVerseReference,
+      r.bookChapterReference,
+      r.bookReference
     );
   },
-  FullReference(r) {
+  fullReference(r) {
     const parsers = [
-      ["book", r.Book],
+      ["book", r.book],
       r._,
-      ["chapter", r.Chapter],
+      ["chapter", r.chapter],
       r._,
-      r.OptColon,
+      r.optionalColon,
       r._,
-      ["verse", r.Verse],
+      ["verse", r.verse],
     ];
     return P.seqObj(...parsers);
   },
-  BookReference(r) {
-    return P.seqObj(["book", r.Book]);
+  bookReference(r) {
+    return P.seqObj(["book", r.book]);
   },
-  BookChapterReference(r) {
-    const parsers = [["book", r.Book], r._, ["chapter", r.Chapter]];
+  bookChapterReference(r) {
+    const parsers = [["book", r.book], r._, ["chapter", r.chapter]];
     return P.seqObj(...parsers);
   },
-  BookChapterVerseReference(r) {
+  bookChapterVerseReference(r) {
     const parsers = [
-      ["book", r.Book],
+      ["book", r.book],
       r._,
-      ["chapter", r.Chapter],
+      ["chapter", r.chapter],
       r._,
-      r.Colon,
+      r.colon,
       r._,
-      ["verse", r.Verse],
+      ["verse", r.verse],
     ];
     return P.seqObj(...parsers);
   },
-  PartialReference(r) {
+  partialReference(r) {
     return P.alt(
-      r.PartialChapterAndVerseReference,
-      r.PartialChapterOrVerseReference
+      r.partialChapterAndVerseReference,
+      r.partialChapterOrVerseReference
     );
   },
-  PartialChapterOrVerseReference(r) {
-    return r.Chapter.or(r.Verse);
+  partialChapterOrVerseReference(r) {
+    return r.chapter.or(r.verse);
   },
-  PartialChapterAndVerseReference(r) {
+  partialChapterAndVerseReference(r) {
     const parsers = [
-      ["chapter", r.Chapter],
+      ["chapter", r.chapter],
       r._,
-      r.Colon,
+      r.colon,
       r._,
-      ["verse", r.Verse],
+      ["verse", r.verse],
     ];
     return P.seqObj(...parsers);
   },
-  Book() {
+  book() {
     return P.alt(...books.map((book) => P.string(book)));
   },
-  Chapter() {
+  chapter() {
     return P.regexp(/[0-9]+/);
   },
-  Verse() {
+  verse() {
     return P.regexp(/[0-9]+/);
   },
-  Colon() {
+  colon() {
     return P.string(":");
   },
-  Dash() {
+  dash() {
     return P.string("-");
   },
-  OptBook(r) {
-    return r.Book.or(P.succeed(""));
+  optionalBook(r) {
+    return r.book.or(P.succeed(null));
   },
-  OptChapter(r) {
-    return r.Chapter.or(P.succeed(""));
+  optionalChapter(r) {
+    return r.chapter.or(P.succeed(null));
   },
-  OptVerse(r) {
-    return r.Verse.or(P.succeed(""));
+  optionalVerse(r) {
+    return r.verse.or(P.succeed(null));
   },
-  OptColon(r) {
-    return r.Colon.or(P.succeed(""));
+  optionalColon(r) {
+    return r.colon.or(P.succeed(null));
   },
-  OptDash(r) {
-    return r.Dash.or(P.succeed(""));
+  optionalDash(r) {
+    return r.dash.or(P.succeed(null));
   },
   _: function () {
     return P.optWhitespace;

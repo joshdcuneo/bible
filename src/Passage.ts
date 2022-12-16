@@ -6,7 +6,7 @@ export class Passage {
   constructor(readonly from: Reference, readonly to: Reference) {}
 
   static parse(input: string): Passage {
-    const { value } = Parser.Passage.parse(input);
+    const { value } = Parser.passage.parse(input);
 
     if (value === undefined) {
       throw new Error(`Could not parse passage: ${input}`);
@@ -29,6 +29,13 @@ export class Passage {
     }
 
     return `${this.from.toString()}-${this.to.toString()}`;
+  }
+
+  toValue() {
+    return {
+      from: this.from.toValue(),
+      to: this.to.toValue(),
+    };
   }
 
   private isSameBook() {
