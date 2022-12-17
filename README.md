@@ -1,5 +1,7 @@
 # Bible
 
+[Full Documentation](https://joshdcuneo.github.io/bible)
+
 This packages contains Passage and Reference types which can be used to work with references to passages of the Bible.
 
 ## Reference
