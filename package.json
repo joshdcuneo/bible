@@ -4,14 +4,16 @@
   "description": "",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "private": false,
   "scripts": {
     "test": "vitest",
-    "build": "tsup src/index.ts --format cjs,esm --dts --external parsimmon",
+    "build": "rm -rf dist && tsup src/index.ts --format cjs,esm --dts --external parsimmon",
     "typecheck": "tsc --noEmit",
-    "docs": "typedoc --out docs src/index.ts"
+    "docs": "typedoc --out docs src/index.ts",
+    "prepack": "npm run build"
   },
   "keywords": [],
-  "author": "",
+  "author": "Josh Cuneo <josh@critical.codes>",
   "license": "ISC",
   "devDependencies": {
     "@types/jest": "^29.2.4",
@@ -25,5 +27,8 @@
   },
   "dependencies": {
     "parsimmon": "^1.18.1"
-  }
+  },
+  "files": [
+    "dist"
+  ]
 }
