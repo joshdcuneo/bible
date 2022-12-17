@@ -4,6 +4,11 @@
 
 This packages contains Passage and Reference types which can be used to work with references to passages of the Bible.
 
+## Installation
+```
+npm install @joshdcuneo/bible
+```
+
 ## Reference
 
 A reference refers to a book, a chapter in a book or a verse in a chapter in a book.
