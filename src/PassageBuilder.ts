@@ -1,16 +1,16 @@
-import { Passage } from "./Passage";
+import { Passage, PassageValue } from "./Passage";
 import { ReferenceBuilder } from "./ReferenceBuilder";
-import { Reference } from "./Reference";
+import type { Reference, ReferenceValue } from "./Reference";
 import { PassageError } from "./PassageError";
 import { ReferenceError } from "./ReferenceError";
 
 export class PassageBuilder {
   constructor(
-    readonly from: Reference | null = null,
-    readonly to: Reference | null = null
+    readonly from: ReferenceValue | null = null,
+    readonly to: ReferenceValue | null = null
   ) {}
 
-  static fromPassage(passage: Passage) {
+  static fromValue(passage: PassageValue) {
     try {
       return new PassageBuilder().setFrom(passage.from).setTo(passage.to);
     } catch (error) {
@@ -18,11 +18,11 @@ export class PassageBuilder {
     }
   }
 
-  setFrom(from: Reference): PassageBuilder {
+  setFrom(from: ReferenceValue): PassageBuilder {
     return new PassageBuilder(this.buildReference(from), this.to);
   }
 
-  setTo(to: Reference): PassageBuilder {
+  setTo(to: ReferenceValue): PassageBuilder {
     return new PassageBuilder(this.from, this.buildReference(to));
   }
 
@@ -38,8 +38,8 @@ export class PassageBuilder {
     return new Passage(this.from, this.to);
   }
 
-  private buildReference(reference: Reference): Reference {
-    const builder = ReferenceBuilder.fromReference(reference);
+  private buildReference(reference: ReferenceValue): Reference {
+    const builder = ReferenceBuilder.fromValue(reference);
 
     if (!builder.isValid()) {
       throw ReferenceError.invalidReference();

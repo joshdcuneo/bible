@@ -1,5 +1,5 @@
 import { bible } from "./Bible";
-import { Reference } from "./Reference";
+import { Reference, ReferenceValue } from "./Reference";
 import { ReferenceError } from "./ReferenceError";
 
 export class ReferenceBuilder {
@@ -9,7 +9,7 @@ export class ReferenceBuilder {
     readonly verse: number | null = null
   ) {}
 
-  static fromReference(reference: Reference): ReferenceBuilder {
+  static fromValue(reference: Partial<ReferenceValue>): ReferenceBuilder {
     return new ReferenceBuilder(
       reference.book,
       reference.chapter ? Number(reference.chapter) : reference.chapter,
@@ -22,11 +22,11 @@ export class ReferenceBuilder {
   }
 
   setChapter(chapter: number) {
-    return new ReferenceBuilder(this.book, Number(chapter), this.verse);
+    return new ReferenceBuilder(this.book, chapter, this.verse);
   }
 
   setVerse(verse: number) {
-    return new ReferenceBuilder(this.book, this.chapter, Number(this.chapter));
+    return new ReferenceBuilder(this.book, this.chapter, verse);
   }
 
   isValid(): this is Reference {
@@ -43,7 +43,7 @@ export class ReferenceBuilder {
 
   complete() {
     if (!this.isValid()) {
-      throw ReferenceError.invalidReference()
+      throw ReferenceError.invalidReference();
     }
 
     return new Reference(this.book, this.chapter, this.verse);

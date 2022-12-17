@@ -88,3 +88,63 @@ describe("Parse", () => {
     }).toThrow(new Error("Invalid passage"));
   });
 });
+
+describe("extract", () => {
+  it("extracts a passage from a string that is just a passage", () => {
+    const result = Passage.extract("Genesis 1:1-2:3");
+    expect(result).toEqual(
+      new Passage(
+        new Reference("Genesis", 1, 1),
+        new Reference("Genesis", 2, 3)
+      )
+    );
+  });
+
+  it("extracts a passage from a string with leading text", () => {
+    const result = Passage.extract("Today's reading is Genesis 1:1-2:3");
+    expect(result).toEqual(
+      new Passage(
+        new Reference("Genesis", 1, 1),
+        new Reference("Genesis", 2, 3)
+      )
+    );
+  });
+
+  it("extracts a passage from a string with trailing text", () => {
+    const result = Passage.extract("Genesis 1:1-2:3 is the reading today");
+    expect(result).toEqual(
+      new Passage(
+        new Reference("Genesis", 1, 1),
+        new Reference("Genesis", 2, 3)
+      )
+    );
+  });
+
+  it("extracts a passage from a string with leading and trailing text", () => {
+    const result = Passage.extract(
+      "Today's reading is Genesis 1:1-2:3 so please open your bible"
+    );
+    expect(result).toEqual(
+      new Passage(
+        new Reference("Genesis", 1, 1),
+        new Reference("Genesis", 2, 3)
+      )
+    );
+  });
+});
+
+describe("extractAll", () => {
+  it("extracts many passages", () => {
+    const result = Passage.extractAll("Genesis 1:1-2:3 and Genesis 3:4-5:6");
+    expect(result).toEqual([
+      new Passage(
+        new Reference("Genesis", 1, 1),
+        new Reference("Genesis", 2, 3)
+      ),
+      new Passage(
+        new Reference("Genesis", 3, 4),
+        new Reference("Genesis", 5,6)
+      ),
+    ]);
+  });
+});

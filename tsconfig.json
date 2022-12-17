@@ -26,5 +26,8 @@
     "importsNotUsedAsValues": "error",
     "checkJs": true,
     "resolveJsonModule": true
-  }
+  },
+  "include": [
+    "src/**/*"
+  ],
 }
